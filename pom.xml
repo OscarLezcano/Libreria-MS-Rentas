@@ -24,8 +24,6 @@
 			<groupId>com.bigobooks</groupId>
 			<artifactId>bigobooks</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
-			<scope>system</scope>
-			<systemPath>${project.basedir}/lib/bigobooks-0.0.1-SNAPSHOT.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -139,7 +137,8 @@
 							<generateModelTests>false</generateModelTests>
 							<!-- Solo se generan los DTOs de request propios de este servicio.
 								Los DTOs de respuesta (OrderDto, etc.) se toman del JAR local. -->
-							<modelsToGenerate>AuthResponse,OrderCreateRequest,OrderItemCreate,OrderUpdateRequest,OrderStatusChange,CouponCreateRequest,CouponUpdateRequest,PromotionCreateRequest,PromotionUpdateRequest,PromotionBookAdd,PromotionDto</modelsToGenerate>
+							<modelsToGenerate>
+								AuthResponse,OrderCreateRequest,OrderItemCreate,OrderUpdateRequest,OrderStatusChange,CouponCreateRequest,CouponUpdateRequest,PromotionCreateRequest,PromotionUpdateRequest,PromotionBookAdd,PromotionDto</modelsToGenerate>
 							<configOptions>
 								<library>spring-boot</library>
 								<interfaceOnly>true</interfaceOnly>
