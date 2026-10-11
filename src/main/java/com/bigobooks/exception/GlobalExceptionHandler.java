@@ -1,90 +1,93 @@
 package com.bigobooks.exception;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-import com.bigobooks.dto.ApiErrorDto;
+import com.bigobooks.dto.ErrorDto;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 
+/**
+ * Manejo centralizado de fallos: responde siempre el ErrorDto estandar del
+ * common ({message}) sin exponer detalles internos.
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
 	@ExceptionHandler(NotFoundException.class)
-	public ResponseEntity<ApiErrorDto> handleNotFound(NotFoundException ex, HttpServletRequest request) {
-		return build(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage(), request);
+	public ResponseEntity<ErrorDto> handleNotFound(NotFoundException ex) {
+		return build(HttpStatus.NOT_FOUND, ex.getMessage());
 	}
 
 	@ExceptionHandler(ConflictException.class)
-	public ResponseEntity<ApiErrorDto> handleConflict(ConflictException ex, HttpServletRequest request) {
-		return build(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request);
+	public ResponseEntity<ErrorDto> handleConflict(ConflictException ex) {
+		return build(HttpStatus.CONFLICT, ex.getMessage());
 	}
 
 	@ExceptionHandler(UnauthorizedException.class)
-	public ResponseEntity<ApiErrorDto> handleUnauthorized(UnauthorizedException ex, HttpServletRequest request) {
-		return build(HttpStatus.UNAUTHORIZED, "Unauthorized", ex.getMessage(), request);
+	public ResponseEntity<ErrorDto> handleUnauthorized(UnauthorizedException ex) {
+		return build(HttpStatus.UNAUTHORIZED, ex.getMessage());
 	}
 
 	@ExceptionHandler(IllegalArgumentException.class)
-	public ResponseEntity<ApiErrorDto> handleBadRequest(IllegalArgumentException ex, HttpServletRequest request) {
-		return build(HttpStatus.BAD_REQUEST, "Bad Request", ex.getMessage(), request);
+	public ResponseEntity<ErrorDto> handleBadRequest(IllegalArgumentException ex) {
+		return build(HttpStatus.BAD_REQUEST, ex.getMessage());
 	}
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)
-	public ResponseEntity<ApiErrorDto> handleValidation(MethodArgumentNotValidException ex,
-			HttpServletRequest request) {
-		List<ApiErrorDto.FieldErrorDto> fieldErrors = ex.getBindingResult().getFieldErrors().stream()
-				.map(fe -> new ApiErrorDto.FieldErrorDto(fe.getField(), fe.getDefaultMessage()))
-				.toList();
-		ApiErrorDto body = buildBody(HttpStatus.BAD_REQUEST, "Bad Request", "Error de validacion en el cuerpo",
-				request);
-		body.setFieldErrors(fieldErrors);
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+	public ResponseEntity<ErrorDto> handleValidation(MethodArgumentNotValidException ex) {
+		String message = ex.getBindingResult().getFieldErrors().stream()
+				.map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
+				.findFirst()
+				.orElse("Error de validacion");
+		return build(HttpStatus.BAD_REQUEST, message);
 	}
 
 	@ExceptionHandler(ConstraintViolationException.class)
-	public ResponseEntity<ApiErrorDto> handleConstraintViolation(ConstraintViolationException ex,
-			HttpServletRequest request) {
-		return build(HttpStatus.BAD_REQUEST, "Bad Request", ex.getMessage(), request);
+	public ResponseEntity<ErrorDto> handleConstraintViolation(ConstraintViolationException ex) {
+		return build(HttpStatus.BAD_REQUEST, ex.getMessage());
+	}
+
+	@ExceptionHandler(HttpMessageNotReadableException.class)
+	public ResponseEntity<ErrorDto> handleUnreadable(HttpMessageNotReadableException ex) {
+		return build(HttpStatus.BAD_REQUEST, "Cuerpo de la peticion invalido");
+	}
+
+	@ExceptionHandler(MethodArgumentTypeMismatchException.class)
+	public ResponseEntity<ErrorDto> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+		return build(HttpStatus.BAD_REQUEST, "Parametro invalido: " + ex.getName());
+	}
+
+	@ExceptionHandler(NoResourceFoundException.class)
+	public ResponseEntity<ErrorDto> handleNoResource(NoResourceFoundException ex) {
+		return build(HttpStatus.NOT_FOUND, "Recurso no encontrado");
 	}
 
 	@ExceptionHandler(DataIntegrityViolationException.class)
-	public ResponseEntity<ApiErrorDto> handleDataIntegrity(DataIntegrityViolationException ex,
-			HttpServletRequest request) {
-		return build(HttpStatus.CONFLICT, "Conflict", "Conflicto de integridad con los datos", request);
+	public ResponseEntity<ErrorDto> handleDataIntegrity(DataIntegrityViolationException ex) {
+		return build(HttpStatus.CONFLICT, "Conflicto de integridad con los datos");
 	}
 
 	@ExceptionHandler(Exception.class)
-	public ResponseEntity<ApiErrorDto> handleGeneric(Exception ex, HttpServletRequest request) {
-		log.error("Error no controlado en {}", request.getRequestURI(), ex);
-		return build(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error",
-				"Error interno del servidor", request);
+	public ResponseEntity<ErrorDto> handleGeneric(Exception ex) {
+		log.error("Error no controlado", ex);
+		return build(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno del servidor");
 	}
 
-	private ResponseEntity<ApiErrorDto> build(HttpStatus status, String error, String message,
-			HttpServletRequest request) {
-		return ResponseEntity.status(status).body(buildBody(status, error, message, request));
-	}
-
-	private ApiErrorDto buildBody(HttpStatus status, String error, String message, HttpServletRequest request) {
-		ApiErrorDto dto = new ApiErrorDto();
-		dto.setTimestamp(LocalDateTime.now());
-		dto.setStatus(status.value());
-		dto.setError(error);
+	private ResponseEntity<ErrorDto> build(HttpStatus status, String message) {
+		ErrorDto dto = new ErrorDto();
 		dto.setMessage(message);
-		dto.setPath(request.getRequestURI());
-		return dto;
+		return ResponseEntity.status(status).body(dto);
 	}
 }

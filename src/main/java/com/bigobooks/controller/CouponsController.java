@@ -1,5 +1,7 @@
 package com.bigobooks.controller;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -10,10 +12,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.bigobooks.dto.CouponCreateRequest;
 import com.bigobooks.dto.CouponDto;
 import com.bigobooks.dto.CouponUpdateRequest;
-import com.bigobooks.dto.PageResponseDto;
+import com.bigobooks.dto.Envelope;
 import com.bigobooks.entities.orders.Coupon;
 import com.bigobooks.mappers.CouponMapper;
 import com.bigobooks.services.CouponService;
+import com.bigobooks.util.Envelopes;
 
 /**
  * Controlador de cupones: implementa la interfaz generada desde openapi.yaml.
@@ -32,30 +35,31 @@ public class CouponsController implements CouponsApi {
 	}
 
 	@Override
-	public ResponseEntity<CouponDto> createCoupon(CouponCreateRequest couponCreateRequest) {
+	public ResponseEntity<Envelope> createCoupon(CouponCreateRequest couponCreateRequest) {
 		log.info("POST /coupons: creacion de cupon recibida");
 		Coupon created = couponService.createFromRequest(couponCreateRequest);
-		return new ResponseEntity<>(couponMapper.toDto(created), HttpStatus.CREATED);
+		return new ResponseEntity<>(Envelopes.single(couponMapper.toDto(created)), HttpStatus.CREATED);
 	}
 
 	@Override
-	public ResponseEntity<PageResponseDto> listCoupons(String code, Boolean active, Integer minDiscountPercent,
+	public ResponseEntity<Envelope> listCoupons(String code, Boolean active, Integer minDiscountPercent,
 			Integer page, Integer size, String sort) {
 		log.info("GET /coupons: listado de cupones (page={}, size={}, sort={})", page, size, sort);
 		Page<Coupon> coupons = couponService.list(code, active, minDiscountPercent, page, size, sort);
-		return ResponseEntity.ok(PageResponseDto.from(coupons.map(couponMapper::toDto)));
+		List<CouponDto> data = coupons.map(couponMapper::toDto).getContent();
+		return ResponseEntity.ok(Envelopes.page(coupons, data));
 	}
 
 	@Override
-	public ResponseEntity<CouponDto> getCouponById(Long id) {
+	public ResponseEntity<Envelope> getCouponById(Long id) {
 		log.info("GET /coupons/{}: detalle de cupon", id);
-		return ResponseEntity.ok(couponMapper.toDto(couponService.requireById(id)));
+		return ResponseEntity.ok(Envelopes.single(couponMapper.toDto(couponService.requireById(id))));
 	}
 
 	@Override
-	public ResponseEntity<CouponDto> updateCoupon(Long id, CouponUpdateRequest couponUpdateRequest) {
+	public ResponseEntity<Envelope> updateCoupon(Long id, CouponUpdateRequest couponUpdateRequest) {
 		log.info("PUT /coupons/{}: actualizacion de cupon recibida", id);
-		return ResponseEntity.ok(couponMapper.toDto(couponService.update(id, couponUpdateRequest)));
+		return ResponseEntity.ok(Envelopes.single(couponMapper.toDto(couponService.update(id, couponUpdateRequest))));
 	}
 
 	@Override

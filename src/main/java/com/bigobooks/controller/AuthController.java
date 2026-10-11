@@ -11,12 +11,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.bigobooks.dto.AuthResponse;
+import com.bigobooks.dto.Envelope;
 import com.bigobooks.dto.LoginDto;
 import com.bigobooks.dto.RegisterDto;
-import com.bigobooks.dto.UserAccountDto;
 import com.bigobooks.entities.auth.UserAccount;
 import com.bigobooks.mappers.UserAccountMapper;
 import com.bigobooks.services.AuthService;
+import com.bigobooks.util.Envelopes;
 
 /**
  * Controlador de autenticacion: implementa la interfaz AuthApi generada desde
@@ -39,14 +40,14 @@ public class AuthController implements AuthApi {
 	}
 
 	@Override
-	public ResponseEntity<UserAccountDto> registerUser(RegisterDto registerDto) {
+	public ResponseEntity<Envelope> registerUser(RegisterDto registerDto) {
 		log.info("POST /auth/register: registro de usuario recibido");
 		UserAccount user = authService.register(registerDto);
-		return ResponseEntity.status(HttpStatus.CREATED).body(userAccountMapper.toDto(user));
+		return ResponseEntity.status(HttpStatus.CREATED).body(Envelopes.single(userAccountMapper.toDto(user)));
 	}
 
 	@Override
-	public ResponseEntity<AuthResponse> loginUser(LoginDto loginDto) {
+	public ResponseEntity<Envelope> loginUser(LoginDto loginDto) {
 		log.info("POST /auth/login: login recibido");
 		AuthResponse response = authService.login(loginDto);
 		ResponseCookie cookie = ResponseCookie.from(TOKEN_COOKIE, response.getToken())
@@ -58,6 +59,6 @@ public class AuthController implements AuthApi {
 				.build();
 		return ResponseEntity.ok()
 				.header(HttpHeaders.SET_COOKIE, cookie.toString())
-				.body(response);
+				.body(Envelopes.single(response));
 	}
 }

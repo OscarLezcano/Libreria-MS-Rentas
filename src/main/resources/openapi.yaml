@@ -3,10 +3,10 @@ openapi: 3.0.3
 info:
   title: BigoBooks Ventas API
   description: >-
-    Microservicio de ventas de libros. Los schemas de respuesta (OrderDto,
-    OrderDetailDto, CouponDto) se reutilizan del common (Entrega 1);
-    PromotionDto, PageResponseDto y los DTOs de request son propios de este
-    servicio.
+    Microservicio de ventas de libros. Todos los schemas (request y response)
+    viven en el common (Entrega 1) y se toman del JAR local; este servicio solo
+    genera AuthResponse. Las respuestas usan el envoltorio estandar Envelope
+    {data, pagination} y los errores el ErrorDto, ambos del common.
   version: 1.0.0
 paths:
   /auth/register:
@@ -26,7 +26,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserAccountDto'
+                $ref: '#/components/schemas/Envelope'
         '400':
           $ref: '#/components/responses/BadRequest'
         '409':
@@ -55,7 +55,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthResponse'
+                $ref: '#/components/schemas/Envelope'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -79,7 +79,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrderDto'
+                $ref: '#/components/schemas/Envelope'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -150,11 +150,11 @@ paths:
             type: string
       responses:
         '200':
-          description: Pagina de ventas (content = OrderDto[])
+          description: Pagina de ventas (Envelope con data = OrderDto[] y pagination)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PageResponseDto'
+                $ref: '#/components/schemas/Envelope'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /orders/{id}:
@@ -170,7 +170,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrderDto'
+                $ref: '#/components/schemas/Envelope'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -193,7 +193,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrderDto'
+                $ref: '#/components/schemas/Envelope'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -238,7 +238,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrderDto'
+                $ref: '#/components/schemas/Envelope'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -264,7 +264,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CouponDto'
+                $ref: '#/components/schemas/Envelope'
         '400':
           $ref: '#/components/responses/BadRequest'
         '500':
@@ -312,11 +312,11 @@ paths:
             type: string
       responses:
         '200':
-          description: Pagina de cupones (content = CouponDto[])
+          description: Pagina de cupones (Envelope con data = CouponDto[] y pagination)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PageResponseDto'
+                $ref: '#/components/schemas/Envelope'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /coupons/{id}:
@@ -332,7 +332,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CouponDto'
+                $ref: '#/components/schemas/Envelope'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -355,7 +355,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CouponDto'
+                $ref: '#/components/schemas/Envelope'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -392,7 +392,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PromotionDto'
+                $ref: '#/components/schemas/Envelope'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -449,11 +449,11 @@ paths:
             type: string
       responses:
         '200':
-          description: Pagina de promociones (content = PromotionDto[])
+          description: Pagina de promociones (Envelope con data = PromotionDto[] y pagination)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PageResponseDto'
+                $ref: '#/components/schemas/Envelope'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /promotions/{id}:
@@ -469,7 +469,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PromotionDto'
+                $ref: '#/components/schemas/Envelope'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -492,7 +492,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PromotionDto'
+                $ref: '#/components/schemas/Envelope'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -531,7 +531,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PromotionDto'
+                $ref: '#/components/schemas/Envelope'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -573,64 +573,45 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ApiErrorDto'
+            $ref: '#/components/schemas/ErrorDto'
     NotFound:
       description: Recurso no encontrado
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ApiErrorDto'
+            $ref: '#/components/schemas/ErrorDto'
     Conflict:
       description: Operacion no permitida en el estado actual del recurso
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ApiErrorDto'
+            $ref: '#/components/schemas/ErrorDto'
     Unauthorized:
       description: Credenciales invalidas
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ApiErrorDto'
+            $ref: '#/components/schemas/ErrorDto'
     InternalServerError:
       description: Error interno
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ApiErrorDto'
+            $ref: '#/components/schemas/ErrorDto'
   schemas:
-    ApiErrorDto:
+    # Los siguientes schemas se documentan aca pero NO se generan
+    # (modelsToGenerate): sus clases viven en el JAR del common.
+    Envelope:
+      type: object
+      description: Envoltorio estandar de respuesta (data = DTO del recurso; pagination solo en listados)
+      properties:
+        data:
+          type: object
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+    Pagination:
       type: object
       properties:
-        timestamp:
-          type: string
-          format: date-time
-        status:
-          type: integer
-          format: int32
-        error:
-          type: string
-        message:
-          type: string
-        path:
-          type: string
-        fieldErrors:
-          type: array
-          items:
-            type: object
-            properties:
-              field:
-                type: string
-              message:
-                type: string
-    PageResponseDto:
-      type: object
-      description: Envoltura de paginacion (content es una lista del DTO correspondiente, segun el endpoint)
-      properties:
-        content:
-          type: array
-          items:
-            type: object
         page:
           type: integer
           format: int32
@@ -643,6 +624,11 @@ components:
         totalPages:
           type: integer
           format: int32
+    ErrorDto:
+      type: object
+      properties:
+        message:
+          type: string
     # LoginDto/RegisterDto/UserAccountDto se documentan aca pero NO se
     # generan (modelsToGenerate): sus clases viven en el JAR del common.
     LoginDto:

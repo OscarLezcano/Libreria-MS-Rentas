@@ -84,9 +84,9 @@ class OrdersControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"items\":[{\"bookId\":10,\"quantity\":2}]}"))
 				.andExpect(status().isCreated())
-				.andExpect(jsonPath("$.id").value(1))
-				.andExpect(jsonPath("$.status").value("PENDING"))
-				.andExpect(jsonPath("$.totalPrice").value(2000));
+				.andExpect(jsonPath("$.data.id").value(1))
+				.andExpect(jsonPath("$.data.status").value("PENDING"))
+				.andExpect(jsonPath("$.data.totalPrice").value(2000));
 	}
 
 	@Test
@@ -108,7 +108,7 @@ class OrdersControllerTest {
 
 		mockMvc.perform(get("/orders/1"))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.id").value(1));
+				.andExpect(jsonPath("$.data.id").value(1));
 	}
 
 	@Test
@@ -127,7 +127,7 @@ class OrdersControllerTest {
 
 		mockMvc.perform(get("/orders").param("page", "0").param("size", "10"))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.content").isArray())
-				.andExpect(jsonPath("$.totalElements").value(0));
+				.andExpect(jsonPath("$.data").isArray())
+				.andExpect(jsonPath("$.pagination.totalElements").value(0));
 	}
 }
