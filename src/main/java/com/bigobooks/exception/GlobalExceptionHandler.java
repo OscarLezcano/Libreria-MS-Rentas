@@ -3,7 +3,6 @@ package com.bigobooks.exception;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -68,11 +67,6 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(MethodArgumentTypeMismatchException.class)
 	public ResponseEntity<ErrorDto> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
 		return build(HttpStatus.BAD_REQUEST, "Parametro invalido: " + ex.getName());
-	}
-
-	@ExceptionHandler(PropertyReferenceException.class)
-	public ResponseEntity<ErrorDto> handlePropertyReference(PropertyReferenceException ex) {
-		return build(HttpStatus.BAD_REQUEST, "Parametro de ordenamiento invalido");
 	}
 
 	@ExceptionHandler(NoResourceFoundException.class)
