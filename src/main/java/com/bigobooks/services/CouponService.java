@@ -2,10 +2,12 @@ package com.bigobooks.services;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bigobooks.cache.CacheNames;
 import com.bigobooks.dto.CouponCreateRequest;
 import com.bigobooks.dto.CouponUpdateRequest;
 import com.bigobooks.entities.orders.Coupon;
@@ -57,6 +59,7 @@ public class CouponService extends BaseService<Coupon, CouponRepository> {
 		return saved;
 	}
 
+	@CacheEvict(cacheNames = CacheNames.COUPONS, key = "#id")
 	@Transactional
 	public Coupon update(Long id, CouponUpdateRequest request) {
 		if (request == null) {
@@ -78,6 +81,7 @@ public class CouponService extends BaseService<Coupon, CouponRepository> {
 		return result;
 	}
 
+	@CacheEvict(cacheNames = CacheNames.COUPONS, key = "#id")
 	@Transactional
 	public void delete(Long id) {
 		Coupon coupon = requireById(id);

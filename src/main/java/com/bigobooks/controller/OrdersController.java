@@ -18,6 +18,7 @@ import com.bigobooks.dto.OrderUpdateRequest;
 import com.bigobooks.entities.orders.Order;
 import com.bigobooks.entities.orders.OrderStatus;
 import com.bigobooks.mappers.OrderMapper;
+import com.bigobooks.services.OrderQueryService;
 import com.bigobooks.services.OrderService;
 import com.bigobooks.util.Envelopes;
 
@@ -30,10 +31,12 @@ public class OrdersController implements OrdersApi {
 	private static final Logger log = LoggerFactory.getLogger(OrdersController.class);
 
 	private final OrderService orderService;
+	private final OrderQueryService orderQueryService;
 	private final OrderMapper orderMapper;
 
-	public OrdersController(OrderService orderService, OrderMapper orderMapper) {
+	public OrdersController(OrderService orderService, OrderQueryService orderQueryService, OrderMapper orderMapper) {
 		this.orderService = orderService;
+		this.orderQueryService = orderQueryService;
 		this.orderMapper = orderMapper;
 	}
 
@@ -57,7 +60,7 @@ public class OrdersController implements OrdersApi {
 	@Override
 	public ResponseEntity<Envelope> getOrderById(Long id) {
 		log.info("GET /orders/{}: detalle de venta", id);
-		return ResponseEntity.ok(Envelopes.single(orderMapper.toDto(orderService.requireById(id))));
+		return ResponseEntity.ok(Envelopes.single(orderQueryService.getById(id)));
 	}
 
 	@Override

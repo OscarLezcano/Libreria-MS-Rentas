@@ -6,10 +6,12 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bigobooks.cache.CacheNames;
 import com.bigobooks.dto.PromotionBookAdd;
 import com.bigobooks.dto.PromotionCreateRequest;
 import com.bigobooks.dto.PromotionUpdateRequest;
@@ -60,6 +62,7 @@ public class PromotionService extends BaseService<Promotion, PromotionRepository
 		return saved;
 	}
 
+	@CacheEvict(cacheNames = CacheNames.PROMOTIONS, key = "#id")
 	@Transactional
 	public Promotion update(Long id, PromotionUpdateRequest request) {
 		if (request == null) {
@@ -81,6 +84,7 @@ public class PromotionService extends BaseService<Promotion, PromotionRepository
 		return saved;
 	}
 
+	@CacheEvict(cacheNames = CacheNames.PROMOTIONS, key = "#id")
 	@Transactional
 	public Promotion addBooks(Long id, PromotionBookAdd request) {
 		if (request == null || request.getBookIds() == null || request.getBookIds().isEmpty()) {
@@ -104,6 +108,7 @@ public class PromotionService extends BaseService<Promotion, PromotionRepository
 		return saved;
 	}
 
+	@CacheEvict(cacheNames = CacheNames.PROMOTIONS, key = "#id")
 	@Transactional
 	public Promotion removeBook(Long id, Long bookId) {
 		Promotion promotion = requireById(id);
@@ -127,6 +132,7 @@ public class PromotionService extends BaseService<Promotion, PromotionRepository
 		return result;
 	}
 
+	@CacheEvict(cacheNames = CacheNames.PROMOTIONS, key = "#id")
 	@Transactional
 	public void delete(Long id) {
 		Promotion promotion = requireById(id);

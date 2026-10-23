@@ -15,6 +15,7 @@ import com.bigobooks.dto.CouponUpdateRequest;
 import com.bigobooks.dto.Envelope;
 import com.bigobooks.entities.orders.Coupon;
 import com.bigobooks.mappers.CouponMapper;
+import com.bigobooks.services.CouponQueryService;
 import com.bigobooks.services.CouponService;
 import com.bigobooks.util.Envelopes;
 
@@ -27,10 +28,13 @@ public class CouponsController implements CouponsApi {
 	private static final Logger log = LoggerFactory.getLogger(CouponsController.class);
 
 	private final CouponService couponService;
+	private final CouponQueryService couponQueryService;
 	private final CouponMapper couponMapper;
 
-	public CouponsController(CouponService couponService, CouponMapper couponMapper) {
+	public CouponsController(CouponService couponService, CouponQueryService couponQueryService,
+			CouponMapper couponMapper) {
 		this.couponService = couponService;
+		this.couponQueryService = couponQueryService;
 		this.couponMapper = couponMapper;
 	}
 
@@ -53,7 +57,7 @@ public class CouponsController implements CouponsApi {
 	@Override
 	public ResponseEntity<Envelope> getCouponById(Long id) {
 		log.info("GET /coupons/{}: detalle de cupon", id);
-		return ResponseEntity.ok(Envelopes.single(couponMapper.toDto(couponService.requireById(id))));
+		return ResponseEntity.ok(Envelopes.single(couponQueryService.getById(id)));
 	}
 
 	@Override

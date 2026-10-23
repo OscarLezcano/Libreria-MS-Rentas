@@ -6,10 +6,12 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bigobooks.cache.CacheNames;
 import com.bigobooks.dto.OrderCreateRequest;
 import com.bigobooks.dto.OrderItemCreate;
 import com.bigobooks.dto.OrderUpdateRequest;
@@ -83,6 +85,7 @@ public class OrderService extends BaseService<Order, OrderRepository> {
 		return result;
 	}
 
+	@CacheEvict(cacheNames = CacheNames.ORDERS, key = "#id")
 	@Transactional
 	public Order update(Long id, OrderUpdateRequest request) {
 		if (request == null) {
@@ -115,6 +118,7 @@ public class OrderService extends BaseService<Order, OrderRepository> {
 	 * PENDING-&gt;CANCELLED y PAID-&gt;REFUNDED. El pago descuenta stock y el
 	 * reembolso lo devuelve.
 	 */
+	@CacheEvict(cacheNames = CacheNames.ORDERS, key = "#id")
 	@Transactional
 	public Order changeStatus(Long id, OrderStatus newStatus) {
 		if (newStatus == null) {
@@ -148,6 +152,7 @@ public class OrderService extends BaseService<Order, OrderRepository> {
 		return result;
 	}
 
+	@CacheEvict(cacheNames = CacheNames.ORDERS, key = "#id")
 	@Transactional
 	public void delete(Long id) {
 		Order order = requireById(id);

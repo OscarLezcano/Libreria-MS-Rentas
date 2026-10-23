@@ -15,9 +15,11 @@ import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -28,6 +30,7 @@ import com.bigobooks.entities.orders.OrderStatus;
 import com.bigobooks.exception.GlobalExceptionHandler;
 import com.bigobooks.exception.NotFoundException;
 import com.bigobooks.mappers.OrderMapper;
+import com.bigobooks.services.OrderQueryService;
 import com.bigobooks.services.OrderService;
 
 /**
@@ -36,10 +39,12 @@ import com.bigobooks.services.OrderService;
  * simuladas.
  */
 @WebMvcTest
+@ActiveProfiles("test")
 @ContextConfiguration(classes = OrdersControllerTest.OrdersWebTestConfig.class)
 class OrdersControllerTest {
 
 	@SpringBootConfiguration
+	@Profile("test")
 	@Import(GlobalExceptionHandler.class)
 	static class OrdersWebTestConfig {
 
@@ -54,8 +59,13 @@ class OrdersControllerTest {
 		}
 
 		@Bean
-		OrdersController ordersController(OrderService service, OrderMapper mapper) {
-			return new OrdersController(service, mapper);
+		OrderQueryService orderQueryService() {
+			return org.mockito.Mockito.mock(OrderQueryService.class);
+		}
+
+		@Bean
+		OrdersController ordersController(OrderService service, OrderQueryService queryService, OrderMapper mapper) {
+			return new OrdersController(service, queryService, mapper);
 		}
 	}
 
@@ -67,6 +77,9 @@ class OrdersControllerTest {
 
 	@Autowired
 	private OrderMapper orderMapper;
+
+	@Autowired
+	private OrderQueryService orderQueryService;
 
 	@Test
 	void creaUnaVenta() throws Exception {
@@ -99,12 +112,9 @@ class OrdersControllerTest {
 
 	@Test
 	void obtieneUnaVentaPorId() throws Exception {
-		Order order = new Order();
-		order.setId(1L);
 		OrderDto dto = new OrderDto();
 		dto.setId(1L);
-		when(orderService.requireById(1L)).thenReturn(order);
-		when(orderMapper.toDto(order)).thenReturn(dto);
+		when(orderQueryService.getById(1L)).thenReturn(dto);
 
 		mockMvc.perform(get("/orders/1"))
 				.andExpect(status().isOk())
@@ -113,7 +123,7 @@ class OrdersControllerTest {
 
 	@Test
 	void obtieneUnaVentaInexistente() throws Exception {
-		when(orderService.requireById(99L)).thenThrow(new NotFoundException("No existe la venta con id 99"));
+		when(orderQueryService.getById(99L)).thenThrow(new NotFoundException("No existe la venta con id 99"));
 
 		mockMvc.perform(get("/orders/99"))
 				.andExpect(status().isNotFound())

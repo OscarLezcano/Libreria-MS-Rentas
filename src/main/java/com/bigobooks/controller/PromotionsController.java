@@ -16,6 +16,7 @@ import com.bigobooks.dto.PromotionDto;
 import com.bigobooks.dto.PromotionUpdateRequest;
 import com.bigobooks.mappers.PromotionMapper;
 import com.bigobooks.model.Promotion;
+import com.bigobooks.services.PromotionQueryService;
 import com.bigobooks.services.PromotionService;
 import com.bigobooks.util.Envelopes;
 
@@ -29,10 +30,13 @@ public class PromotionsController implements PromotionsApi {
 	private static final Logger log = LoggerFactory.getLogger(PromotionsController.class);
 
 	private final PromotionService promotionService;
+	private final PromotionQueryService promotionQueryService;
 	private final PromotionMapper promotionMapper;
 
-	public PromotionsController(PromotionService promotionService, PromotionMapper promotionMapper) {
+	public PromotionsController(PromotionService promotionService, PromotionQueryService promotionQueryService,
+			PromotionMapper promotionMapper) {
 		this.promotionService = promotionService;
+		this.promotionQueryService = promotionQueryService;
 		this.promotionMapper = promotionMapper;
 	}
 
@@ -55,7 +59,7 @@ public class PromotionsController implements PromotionsApi {
 	@Override
 	public ResponseEntity<Envelope> getPromotionById(Long id) {
 		log.info("GET /promotions/{}: detalle de promocion", id);
-		return ResponseEntity.ok(Envelopes.single(promotionMapper.toDto(promotionService.requireById(id))));
+		return ResponseEntity.ok(Envelopes.single(promotionQueryService.getById(id)));
 	}
 
 	@Override
