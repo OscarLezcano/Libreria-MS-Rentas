@@ -8,6 +8,7 @@
 	<springProperty scope="context" name="logPattern" source="sales.log.pattern" defaultValue="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{40} - %msg%n"/>
 	<springProperty scope="context" name="levelBigobooks" source="sales.log.level.com.bigobooks" defaultValue="INFO"/>
 	<springProperty scope="context" name="levelCache" source="sales.log.level.cache" defaultValue="INFO"/>
+	<springProperty scope="context" name="levelSecurity" source="sales.log.level.security" defaultValue="DEBUG"/>
 	<springProperty scope="context" name="levelRepositories" source="sales.log.level.repositories" defaultValue="DEBUG"/>
 	<springProperty scope="context" name="levelSql" source="sales.log.level.sql" defaultValue="DEBUG"/>
 
@@ -40,6 +41,8 @@
 
 	<!-- Cache: cada HIT/MISS/PUT/EVICT/CLEAR queda registrado por LoggingCache -->
 	<logger name="com.bigobooks.cache" level="${levelCache}"/>
+	<!-- Seguridad: eventos de autenticacion/autorizacion -->
+	<logger name="com.bigobooks.security" level="${levelSecurity}"/>
 
 	<!-- Repository: consultas importantes en DEBUG -->
 	<logger name="com.bigobooks.repositories" level="${levelRepositories}"/>
