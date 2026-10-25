@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.bigobooks.dto.Envelope;
@@ -48,6 +49,7 @@ public class OrdersController implements OrdersApi {
 	}
 
 	@Override
+	@PreAuthorize("hasAnyRole('ADMIN','SELLER','WAREHOUSE','READER')")
 	public ResponseEntity<Envelope> listOrders(String status, Long warehouseId, String couponCode, Long bookId,
 			LocalDateTime createdFrom, LocalDateTime createdTo, Integer page, Integer size, String sort) {
 		log.info("GET /orders: listado de ventas (page={}, size={}, sort={})", page, size, sort);
@@ -58,18 +60,21 @@ public class OrdersController implements OrdersApi {
 	}
 
 	@Override
+	@PreAuthorize("hasAnyRole('ADMIN','SELLER','WAREHOUSE','READER')")
 	public ResponseEntity<Envelope> getOrderById(Long id) {
 		log.info("GET /orders/{}: detalle de venta", id);
 		return ResponseEntity.ok(Envelopes.single(orderQueryService.getById(id)));
 	}
 
 	@Override
+	@PreAuthorize("hasAnyRole('ADMIN','SELLER')")
 	public ResponseEntity<Envelope> updateOrder(Long id, OrderUpdateRequest orderUpdateRequest) {
 		log.info("PUT /orders/{}: actualizacion de venta recibida", id);
 		return ResponseEntity.ok(Envelopes.single(orderMapper.toDto(orderService.update(id, orderUpdateRequest))));
 	}
 
 	@Override
+	@PreAuthorize("hasAnyRole('ADMIN','SELLER','WAREHOUSE')")
 	public ResponseEntity<Envelope> changeOrderStatus(Long id, OrderStatusChange orderStatusChange) {
 		log.info("PUT /orders/{}/status: cambio de estado recibido", id);
 		OrderStatusChange.StatusEnum status = orderStatusChange == null ? null : orderStatusChange.getStatus();
@@ -78,6 +83,7 @@ public class OrdersController implements OrdersApi {
 	}
 
 	@Override
+	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<Void> deleteOrder(Long id) {
 		log.info("DELETE /orders/{}: borrado logico de venta recibido", id);
 		orderService.delete(id);

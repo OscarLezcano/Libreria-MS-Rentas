@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.bigobooks.dto.CouponCreateRequest;
@@ -39,6 +40,7 @@ public class CouponsController implements CouponsApi {
 	}
 
 	@Override
+	@PreAuthorize("hasAnyRole('ADMIN','SELLER')")
 	public ResponseEntity<Envelope> createCoupon(CouponCreateRequest couponCreateRequest) {
 		log.info("POST /coupons: creacion de cupon recibida");
 		Coupon created = couponService.createFromRequest(couponCreateRequest);
@@ -46,6 +48,7 @@ public class CouponsController implements CouponsApi {
 	}
 
 	@Override
+	@PreAuthorize("hasAnyRole('ADMIN','SELLER','WAREHOUSE','READER')")
 	public ResponseEntity<Envelope> listCoupons(String code, Boolean active, Integer minDiscountPercent,
 			Integer page, Integer size, String sort) {
 		log.info("GET /coupons: listado de cupones (page={}, size={}, sort={})", page, size, sort);
@@ -55,18 +58,21 @@ public class CouponsController implements CouponsApi {
 	}
 
 	@Override
+	@PreAuthorize("hasAnyRole('ADMIN','SELLER','WAREHOUSE','READER')")
 	public ResponseEntity<Envelope> getCouponById(Long id) {
 		log.info("GET /coupons/{}: detalle de cupon", id);
 		return ResponseEntity.ok(Envelopes.single(couponQueryService.getById(id)));
 	}
 
 	@Override
+	@PreAuthorize("hasAnyRole('ADMIN','SELLER')")
 	public ResponseEntity<Envelope> updateCoupon(Long id, CouponUpdateRequest couponUpdateRequest) {
 		log.info("PUT /coupons/{}: actualizacion de cupon recibida", id);
 		return ResponseEntity.ok(Envelopes.single(couponMapper.toDto(couponService.update(id, couponUpdateRequest))));
 	}
 
 	@Override
+	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<Void> deleteCoupon(Long id) {
 		log.info("DELETE /coupons/{}: borrado logico de cupon recibido", id);
 		couponService.delete(id);
