@@ -18,8 +18,9 @@ import com.bigobooks.dto.OrderUpdateRequest;
 import com.bigobooks.entities.auth.UserAccount;
 import com.bigobooks.entities.orders.Order;
 import com.bigobooks.entities.orders.OrderStatus;
-import com.bigobooks.exception.ConflictException;
-import com.bigobooks.exception.NotFoundException;
+import com.bigobooks.util.exception.ConflictException;
+import com.bigobooks.util.exception.NotFoundException;
+import com.bigobooks.util.exception.ResourceType;
 import com.bigobooks.repositories.OrderRepository;
 import com.bigobooks.service.BaseService;
 import com.bigobooks.specifications.OrderSpecifications;
@@ -49,7 +50,7 @@ public class OrderService extends BaseService<Order, OrderRepository> {
 	/** Venta con sus detalles ya cargados. */
 	public Order requireById(Long id) {
 		return getRepository().findByIdWithDetails(id)
-				.orElseThrow(() -> new NotFoundException("No existe la venta con id " + id));
+				.orElseThrow(() -> NotFoundException.byId(ResourceType.ORDER, id));
 	}
 
 	@Transactional

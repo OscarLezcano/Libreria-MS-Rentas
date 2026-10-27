@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.bigobooks.entities.orders.Order;
 import com.bigobooks.entities.orders.OrderDetail;
 import com.bigobooks.entities.stock.Stock;
-import com.bigobooks.exception.ConflictException;
+import com.bigobooks.util.exception.ConflictException;
 import com.bigobooks.repositories.StockRepository;
 import com.bigobooks.service.BaseService;
 

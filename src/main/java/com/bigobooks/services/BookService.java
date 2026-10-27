@@ -3,7 +3,8 @@ package com.bigobooks.services;
 import org.springframework.stereotype.Service;
 
 import com.bigobooks.entities.book.Book;
-import com.bigobooks.exception.NotFoundException;
+import com.bigobooks.util.exception.NotFoundException;
+import com.bigobooks.util.exception.ResourceType;
 import com.bigobooks.repositories.BookRepository;
 import com.bigobooks.service.BaseService;
 
@@ -19,6 +20,6 @@ public class BookService extends BaseService<Book, BookRepository> {
 	}
 
 	public Book requireById(Long id) {
-		return findById(id).orElseThrow(() -> new NotFoundException("No existe el libro con id " + id));
+		return findById(id).orElseThrow(() -> NotFoundException.byId(ResourceType.BOOK, id));
 	}
 }
