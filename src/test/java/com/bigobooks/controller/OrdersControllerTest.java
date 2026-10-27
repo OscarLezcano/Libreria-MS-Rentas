@@ -29,7 +29,7 @@ import com.bigobooks.dto.OrderDto;
 import com.bigobooks.entities.orders.Order;
 import com.bigobooks.entities.orders.OrderStatus;
 import com.bigobooks.exception.NotFoundException;
-import com.bigobooks.shared.web.CommonExceptionHandler;
+import com.bigobooks.util.exception.CommonExceptionHandler;
 import com.bigobooks.mappers.OrderMapper;
 import com.bigobooks.services.OrderQueryService;
 import com.bigobooks.services.OrderService;

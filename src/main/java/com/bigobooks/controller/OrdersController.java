@@ -42,7 +42,7 @@ public class OrdersController implements OrdersApi {
 	}
 
 	@Override
-	@PreAuthorize("hasAnyRole('ADMIN','SELLER')")
+	@PreAuthorize("@roles.allows('orders-manage')")
 	public ResponseEntity<Envelope> createOrder(OrderCreateRequest orderCreateRequest) {
 		log.info("POST /orders: creacion de venta recibida");
 		Order created = orderService.createFromRequest(orderCreateRequest);
@@ -50,7 +50,7 @@ public class OrdersController implements OrdersApi {
 	}
 
 	@Override
-	@PreAuthorize("hasAnyRole('ADMIN','SELLER','WAREHOUSE','READER')")
+	@PreAuthorize("@roles.allows('orders-view')")
 	public ResponseEntity<Envelope> listOrders(String status, Long warehouseId, String couponCode, Long bookId,
 			LocalDateTime createdFrom, LocalDateTime createdTo, Integer page, Integer size, String sort) {
 		log.info("GET /orders: listado de ventas (page={}, size={}, sort={})", page, size, sort);
@@ -61,21 +61,21 @@ public class OrdersController implements OrdersApi {
 	}
 
 	@Override
-	@PreAuthorize("hasAnyRole('ADMIN','SELLER','WAREHOUSE','READER')")
+	@PreAuthorize("@roles.allows('orders-view')")
 	public ResponseEntity<Envelope> getOrderById(Long id) {
 		log.info("GET /orders/{}: detalle de venta", id);
 		return ResponseEntity.ok(Envelopes.single(orderQueryService.getById(id)));
 	}
 
 	@Override
-	@PreAuthorize("hasAnyRole('ADMIN','SELLER')")
+	@PreAuthorize("@roles.allows('orders-manage')")
 	public ResponseEntity<Envelope> updateOrder(Long id, OrderUpdateRequest orderUpdateRequest) {
 		log.info("PUT /orders/{}: actualizacion de venta recibida", id);
 		return ResponseEntity.ok(Envelopes.single(orderMapper.toDto(orderService.update(id, orderUpdateRequest))));
 	}
 
 	@Override
-	@PreAuthorize("hasAnyRole('ADMIN','SELLER','WAREHOUSE')")
+	@PreAuthorize("@roles.allows('orders-status')")
 	public ResponseEntity<Envelope> changeOrderStatus(Long id, OrderStatusChange orderStatusChange) {
 		log.info("PUT /orders/{}/status: cambio de estado recibido", id);
 		OrderStatusChange.StatusEnum status = orderStatusChange == null ? null : orderStatusChange.getStatus();
@@ -84,7 +84,7 @@ public class OrdersController implements OrdersApi {
 	}
 
 	@Override
-	@PreAuthorize("hasRole('ADMIN')")
+	@PreAuthorize("@roles.allows('orders-delete')")
 	public ResponseEntity<Void> deleteOrder(Long id) {
 		log.info("DELETE /orders/{}: borrado logico de venta recibido", id);
 		orderService.delete(id);
