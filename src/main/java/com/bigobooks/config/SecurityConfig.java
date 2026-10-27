@@ -50,8 +50,8 @@ public class SecurityConfig {
 	@Bean
 	JwtDecoder jwtDecoder(@Value("${jwt.secret}") String secret) {
 		return NimbusJwtDecoder
-				.withSecretKey(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"))
-				.macAlgorithm(MacAlgorithm.HS256)
+				.withSecretKey(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA512"))
+				.macAlgorithm(MacAlgorithm.HS512)
 				.build();
 	}
 }

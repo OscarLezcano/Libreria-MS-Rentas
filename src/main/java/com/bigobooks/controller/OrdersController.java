@@ -42,6 +42,7 @@ public class OrdersController implements OrdersApi {
 	}
 
 	@Override
+	@PreAuthorize("hasAnyRole('ADMIN','SELLER')")
 	public ResponseEntity<Envelope> createOrder(OrderCreateRequest orderCreateRequest) {
 		log.info("POST /orders: creacion de venta recibida");
 		Order created = orderService.createFromRequest(orderCreateRequest);
