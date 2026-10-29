@@ -17,7 +17,21 @@ import com.bigobooks.entities.orders.OrderStatus;
 @Component
 public class OrderMapper {
 
+	/** DTO completo, con el desglose de cada detalle. */
 	public OrderDto toDto(Order order) {
+		return toDto(order, true);
+	}
+
+	/**
+	 * DTO resumido: orderDetails solo lleva el id de cada detalle. Se usa en
+	 * listados y en la consulta de la venta para no anidar objetos dentro de
+	 * objetos; el desglose completo se obtiene en GET /orders/{id}/details.
+	 */
+	public OrderDto toSummaryDto(Order order) {
+		return toDto(order, false);
+	}
+
+	private OrderDto toDto(Order order, boolean includeDetailData) {
 		if (order == null) {
 			return null;
 		}
@@ -37,10 +51,19 @@ public class OrderMapper {
 		List<OrderDetailDto> details = new ArrayList<>();
 		if (order.getOrderDetails() != null) {
 			for (OrderDetail detail : order.getOrderDetails()) {
-				details.add(toDetailDto(detail));
+				details.add(includeDetailData ? toDetailDto(detail) : toDetailSummaryDto(detail));
 			}
 		}
 		dto.setOrderDetails(details);
+		return dto;
+	}
+
+	private OrderDetailDto toDetailSummaryDto(OrderDetail detail) {
+		if (detail == null) {
+			return null;
+		}
+		OrderDetailDto dto = new OrderDetailDto();
+		dto.setId(detail.getId());
 		return dto;
 	}
 

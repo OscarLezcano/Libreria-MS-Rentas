@@ -55,13 +55,22 @@ public class OrderService extends BaseService<Order, OrderRepository> {
 
 	@Transactional
 	public Order createFromRequest(OrderCreateRequest request) {
+		return createFromRequest(request, request != null ? request.getUserId() : null);
+	}
+
+	/**
+	 * Crea la venta con el usuario indicado. El controlador resuelve el usuario
+	 * autenticado (claim uid) cuando el request no trae userId.
+	 */
+	@Transactional
+	public Order createFromRequest(OrderCreateRequest request, Long userId) {
 		if (request == null || request.getItems() == null || request.getItems().isEmpty()) {
 			throw new IllegalArgumentException("Debe incluir al menos un item en la venta");
 		}
 		if (request.getWarehouseId() != null) {
 			warehouseService.requireById(request.getWarehouseId());
 		}
-		UserAccount user = request.getUserId() != null ? userAccountService.requireById(request.getUserId()) : null;
+		UserAccount user = userId != null ? userAccountService.requireById(userId) : null;
 
 		Order order = new Order();
 		order.setStatus(OrderStatus.PENDING);
@@ -144,13 +153,20 @@ public class OrderService extends BaseService<Order, OrderRepository> {
 		return saved;
 	}
 
-	public Page<Order> list(String status, Long warehouseId, String couponCode, Long bookId, LocalDateTime createdFrom,
-			LocalDateTime createdTo, Integer page, Integer size, String sort) {
+	public Page<Order> list(String status, Long userId, Long warehouseId, String couponCode, Long bookId,
+			LocalDateTime createdFrom, LocalDateTime createdTo, Integer page, Integer size, String sort) {
 		Page<Order> result = getRepository().findAll(
-				OrderSpecifications.build(parseStatus(status), warehouseId, couponCode, bookId, createdFrom, createdTo),
+				OrderSpecifications.build(parseStatus(status), userId, warehouseId, couponCode, bookId, createdFrom,
+						createdTo),
 				Pageables.of(page, size, sort));
 		log.debug("Listado de ventas: pagina {} con {} resultado(s)", result.getNumber(), result.getTotalElements());
 		return result;
+	}
+
+	/** Ventas de un usuario puntual (usado por "Mis ordenes"). */
+	public Page<Order> listByUser(Long userId, String status, LocalDateTime createdFrom, LocalDateTime createdTo,
+			Integer page, Integer size, String sort) {
+		return list(status, userId, null, null, null, createdFrom, createdTo, page, size, sort);
 	}
 
 	@CacheEvict(cacheNames = CacheNames.ORDERS, key = "#id")

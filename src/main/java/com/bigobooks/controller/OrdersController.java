@@ -19,6 +19,7 @@ import com.bigobooks.dto.OrderUpdateRequest;
 import com.bigobooks.entities.orders.Order;
 import com.bigobooks.entities.orders.OrderStatus;
 import com.bigobooks.mappers.OrderMapper;
+import com.bigobooks.security.CurrentUser;
 import com.bigobooks.services.OrderQueryService;
 import com.bigobooks.services.OrderService;
 import com.bigobooks.util.Envelopes;
@@ -34,29 +35,51 @@ public class OrdersController implements OrdersApi {
 	private final OrderService orderService;
 	private final OrderQueryService orderQueryService;
 	private final OrderMapper orderMapper;
+	private final CurrentUser currentUser;
 
-	public OrdersController(OrderService orderService, OrderQueryService orderQueryService, OrderMapper orderMapper) {
+	public OrdersController(OrderService orderService, OrderQueryService orderQueryService, OrderMapper orderMapper,
+			CurrentUser currentUser) {
 		this.orderService = orderService;
 		this.orderQueryService = orderQueryService;
 		this.orderMapper = orderMapper;
+		this.currentUser = currentUser;
 	}
 
 	@Override
-	@PreAuthorize("@roles.allows('orders-manage')")
+	@PreAuthorize("@roles.allows('orders-create')")
 	public ResponseEntity<Envelope> createOrder(OrderCreateRequest orderCreateRequest) {
 		log.info("POST /orders: creacion de venta recibida");
-		Order created = orderService.createFromRequest(orderCreateRequest);
-		return new ResponseEntity<>(Envelopes.single(orderMapper.toDto(created)), HttpStatus.CREATED);
+		Long authenticatedUserId = currentUser.id();
+		Long requestedUserId = orderCreateRequest == null ? null : orderCreateRequest.getUserId();
+		// El staff puede registrar la venta a nombre de un cliente; un lector
+		// solo puede comprar para si mismo (id tomado del token).
+		Long effectiveUserId = currentUser.hasAnyRole("ADMIN", "SELLER") && requestedUserId != null
+				? requestedUserId
+				: authenticatedUserId;
+		Order created = orderService.createFromRequest(orderCreateRequest, effectiveUserId);
+		return new ResponseEntity<>(Envelopes.single(orderMapper.toSummaryDto(created)), HttpStatus.CREATED);
 	}
 
 	@Override
 	@PreAuthorize("@roles.allows('orders-view')")
-	public ResponseEntity<Envelope> listOrders(String status, Long warehouseId, String couponCode, Long bookId,
-			LocalDateTime createdFrom, LocalDateTime createdTo, Integer page, Integer size, String sort) {
+	public ResponseEntity<Envelope> listOrders(String status, Long warehouseId, Long userId, String couponCode,
+			Long bookId, LocalDateTime createdFrom, LocalDateTime createdTo, Integer page, Integer size,
+			String sort) {
 		log.info("GET /orders: listado de ventas (page={}, size={}, sort={})", page, size, sort);
-		Page<Order> orders = orderService.list(status, warehouseId, couponCode, bookId, createdFrom, createdTo, page,
-				size, sort);
-		List<OrderDto> data = orders.map(orderMapper::toDto).getContent();
+		Page<Order> orders = orderService.list(status, userId, warehouseId, couponCode, bookId, createdFrom,
+				createdTo, page, size, sort);
+		List<OrderDto> data = orders.map(orderMapper::toSummaryDto).getContent();
+		return ResponseEntity.ok(Envelopes.page(orders, data));
+	}
+
+	@Override
+	@PreAuthorize("@roles.allows('orders-view')")
+	public ResponseEntity<Envelope> listMyOrders(String status, LocalDateTime createdFrom, LocalDateTime createdTo,
+			Integer page, Integer size, String sort) {
+		Long userId = currentUser.id();
+		log.info("GET /orders/mine: listado de ventas del usuario {}", userId);
+		Page<Order> orders = orderService.listByUser(userId, status, createdFrom, createdTo, page, size, sort);
+		List<OrderDto> data = orders.map(orderMapper::toSummaryDto).getContent();
 		return ResponseEntity.ok(Envelopes.page(orders, data));
 	}
 
@@ -68,10 +91,17 @@ public class OrdersController implements OrdersApi {
 	}
 
 	@Override
+	@PreAuthorize("@roles.allows('orders-view')")
+	public ResponseEntity<Envelope> getOrderDetails(Long id) {
+		log.info("GET /orders/{}/details: desglose de venta", id);
+		return ResponseEntity.ok(Envelopes.single(orderQueryService.getDetails(id)));
+	}
+
+	@Override
 	@PreAuthorize("@roles.allows('orders-manage')")
 	public ResponseEntity<Envelope> updateOrder(Long id, OrderUpdateRequest orderUpdateRequest) {
 		log.info("PUT /orders/{}: actualizacion de venta recibida", id);
-		return ResponseEntity.ok(Envelopes.single(orderMapper.toDto(orderService.update(id, orderUpdateRequest))));
+		return ResponseEntity.ok(Envelopes.single(orderMapper.toSummaryDto(orderService.update(id, orderUpdateRequest))));
 	}
 
 	@Override
@@ -80,7 +110,7 @@ public class OrdersController implements OrdersApi {
 		log.info("PUT /orders/{}/status: cambio de estado recibido", id);
 		OrderStatusChange.StatusEnum status = orderStatusChange == null ? null : orderStatusChange.getStatus();
 		OrderStatus newStatus = status == null ? null : OrderStatus.valueOf(status.name());
-		return ResponseEntity.ok(Envelopes.single(orderMapper.toDto(orderService.changeStatus(id, newStatus))));
+		return ResponseEntity.ok(Envelopes.single(orderMapper.toSummaryDto(orderService.changeStatus(id, newStatus))));
 	}
 
 	@Override

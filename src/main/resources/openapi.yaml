@@ -51,6 +51,13 @@ paths:
           schema:
             type: integer
             format: int64
+        - name: userId
+          in: query
+          required: false
+          description: Filtra las ventas del usuario indicado (staff)
+          schema:
+            type: integer
+            format: int64
         - name: couponCode
           in: query
           required: false
@@ -104,11 +111,69 @@ paths:
                 $ref: '#/components/schemas/Envelope'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /orders/mine:
+    get:
+      tags: [orders]
+      operationId: listMyOrders
+      summary: Lista las ventas del usuario autenticado
+      description: >-
+        Usa el identificador del usuario incluido en el token JWT (claim uid).
+        No requiere enviar userId como parametro.
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: Estado de la venta
+          schema:
+            type: string
+            enum: [PENDING, PAID, REFUNDED, CANCELLED]
+        - name: createdFrom
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: createdTo
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Pagina de ventas del usuario autenticado (Envelope con data = OrderDto[] y pagination)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /orders/{id}:
     get:
       tags: [orders]
       operationId: getOrderById
-      summary: Obtiene una venta por id con sus detalles
+      summary: Obtiene una venta por id (orderDetails solo incluye ids)
       parameters:
         - $ref: '#/components/parameters/PathId'
       responses:
@@ -158,6 +223,28 @@ paths:
       responses:
         '204':
           description: Eliminada
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /orders/{id}/details:
+    get:
+      tags: [orders]
+      operationId: getOrderDetails
+      summary: Obtiene el desglose completo de una venta
+      description: >-
+        Devuelve los detalles completos (libro, cantidad, precio y descuento).
+        Se usa porque las respuestas de /orders solo incluyen los ids de los
+        detalles para no anidar objetos dentro de objetos.
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      responses:
+        '200':
+          description: Detalles de la venta (Envelope con data = OrderDetailDto[])
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -824,6 +911,9 @@ components:
           format: int64
         orderDetails:
           type: array
+          description: >-
+            Solo los ids de los detalles. El desglose completo se consulta en
+            GET /orders/{id}/details.
           items:
             $ref: '#/components/schemas/OrderDetailDto'
     OrderDetailDto:
