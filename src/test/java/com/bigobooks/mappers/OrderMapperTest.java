@@ -1,7 +1,6 @@
 package com.bigobooks.mappers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.util.List;
 
@@ -18,25 +17,17 @@ class OrderMapperTest {
 	private final OrderMapper mapper = new OrderMapper();
 
 	@Test
-	void summaryDtoOnlyIncludesDetailIds() {
-		OrderDto dto = mapper.toSummaryDto(sampleOrder());
+	void orderDtoOnlyIncludesDetailIds() {
+		OrderDto dto = mapper.toDto(sampleOrder());
 
 		assertEquals(Long.valueOf(15), dto.getId());
-		assertEquals(1, dto.getOrderDetails().size());
-		OrderDetailDto detail = dto.getOrderDetails().get(0);
-		assertEquals(Long.valueOf(101), detail.getId());
-		assertNull(detail.getBookId());
-		assertNull(detail.getBookName());
-		assertNull(detail.getQuantity());
-		assertNull(detail.getUnitPrice());
-		assertNull(detail.getDiscount());
+		assertEquals(List.of(101L), dto.getOrderDetailIds());
 	}
 
 	@Test
-	void fullDtoIncludesDetailData() {
-		OrderDto dto = mapper.toDto(sampleOrder());
+	void detailDtoIncludesFullData() {
+		OrderDetailDto detail = mapper.toDetailDto(sampleOrder().getOrderDetails().get(0));
 
-		OrderDetailDto detail = dto.getOrderDetails().get(0);
 		assertEquals(Long.valueOf(101), detail.getId());
 		assertEquals(Long.valueOf(3), detail.getBookId());
 		assertEquals("Cien anios de soledad", detail.getBookName());

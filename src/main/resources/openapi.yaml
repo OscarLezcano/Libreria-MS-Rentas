@@ -169,11 +169,40 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /orders/best-sellers:
+    get:
+      tags: [orders]
+      operationId: listBestSellingBooks
+      summary: Lista los libros mas vendidos
+      description: >-
+        Suma las unidades vendidas por libro en las ventas pagadas (PAID) y
+        devuelve el top ordenado de mayor a menor. No incluye ventas
+        pendientes, canceladas ni reembolsadas.
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          description: Cantidad maxima de libros a devolver (1-100)
+          schema:
+            type: integer
+            format: int32
+            default: 10
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Libros mas vendidos (Envelope con data = BestSellingBookDto[])
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /orders/{id}:
     get:
       tags: [orders]
       operationId: getOrderById
-      summary: Obtiene una venta por id (orderDetails solo incluye ids)
+      summary: Obtiene una venta por id (orderDetailIds solo incluye ids)
       parameters:
         - $ref: '#/components/parameters/PathId'
       responses:
@@ -909,13 +938,14 @@ components:
         couponId:
           type: integer
           format: int64
-        orderDetails:
+        orderDetailIds:
           type: array
           description: >-
-            Solo los ids de los detalles. El desglose completo se consulta en
-            GET /orders/{id}/details.
+            Ids de los detalles de la venta. El desglose completo se consulta
+            en GET /orders/{id}/details.
           items:
-            $ref: '#/components/schemas/OrderDetailDto'
+            type: integer
+            format: int64
     OrderDetailDto:
       type: object
       properties:
@@ -939,6 +969,18 @@ components:
           type: string
           format: date-time
         orderId:
+          type: integer
+          format: int64
+    BestSellingBookDto:
+      type: object
+      description: Libro vendido, agregado por cantidad de unidades.
+      properties:
+        bookId:
+          type: integer
+          format: int64
+        bookName:
+          type: string
+        totalSold:
           type: integer
           format: int64
     CouponDto:
